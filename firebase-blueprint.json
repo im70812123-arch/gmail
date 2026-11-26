@@ -1,0 +1,338 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Google-authenticated student profile and personalized learning preferences.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Student display name from Google account or profile."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160,
+          "description": "Verified Google email address."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Google profile avatar URL."
+        },
+        "gradeLevel": {
+          "type": "string",
+          "enum": ["middle", "high"],
+          "description": "Target curriculum grade level."
+        },
+        "careerGoal": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Student's target major or career goal."
+        },
+        "careerPromptDismissed": {
+          "type": "boolean",
+          "description": "Whether the initial career goal prompt was dismissed."
+        },
+        "connectCareer": {
+          "type": "boolean",
+          "description": "Whether career goal connections are enabled across subjects."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "email",
+        "gradeLevel",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "NotebookSession": {
+      "title": "NotebookSession",
+      "description": "Saved AI subject tutor, performance assessment, document/PPT maker, or search session.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 40,
+          "enum": [
+            "korean",
+            "math",
+            "english",
+            "science",
+            "social",
+            "history",
+            "foreign",
+            "informatics",
+            "free-chat",
+            "doc-summary",
+            "photo-analysis",
+            "resource-search",
+            "doc-maker",
+            "ppt-maker"
+          ]
+        },
+        "subTrackId": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "gradeLevel": {
+          "type": "string",
+          "enum": ["middle", "high"]
+        },
+        "studyMode": {
+          "type": "string",
+          "enum": ["tutor", "fast", "solve-only", "performance"]
+        },
+        "thinkingDepth": {
+          "type": "string",
+          "enum": ["standard", "deep"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "messages": {
+          "type": "array",
+          "description": "Bounded conversation messages (without raw base64 preview images; may include structured generatedDocument metadata)."
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "updatedAtMs": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "workspaceId",
+        "gradeLevel",
+        "studyMode",
+        "title",
+        "messages",
+        "updatedAtMs",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SavedPrompt": {
+      "title": "SavedPrompt",
+      "description": "Bookmarked study prompt saved by a student.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdAtMs": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "title",
+        "content",
+        "workspaceId",
+        "createdAtMs",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SavedStudyNote": {
+      "title": "SavedStudyNote",
+      "description": "Saved error-review or key-concept study note.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "workspaceId": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "subTrackLabel": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "gradeLevel": {
+          "type": "string",
+          "enum": ["middle", "high"]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30000
+        },
+        "mastered": {
+          "type": "boolean"
+        },
+        "createdAtMs": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "workspaceId",
+        "gradeLevel",
+        "title",
+        "content",
+        "mastered",
+        "createdAtMs",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SearchHistoryEntry": {
+      "title": "SearchHistoryEntry",
+      "description": "Saved resource-search studio query history.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "subTrackId": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAtMs": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "query",
+        "sessionId",
+        "createdAtMs",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/backend/entities/UserProfile" },
+      "description": "Private student profile containing Google account info, grade level, and career goal."
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/backend/entities/NotebookSession" },
+      "description": "Private notebook conversation sessions owned by the student."
+    },
+    "/users/{userId}/prompts/{promptId}": {
+      "schema": { "$ref": "#/backend/entities/SavedPrompt" },
+      "description": "Private saved prompts owned by the student."
+    },
+    "/users/{userId}/studyNotes/{noteId}": {
+      "schema": { "$ref": "#/backend/entities/SavedStudyNote" },
+      "description": "Private saved error-review and concept study notes owned by the student."
+    },
+    "/users/{userId}/searchHistory/{entryId}": {
+      "schema": { "$ref": "#/backend/entities/SearchHistoryEntry" },
+      "description": "Private resource search history entries owned by the student."
+    }
+  }
+}

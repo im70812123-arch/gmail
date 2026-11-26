@@ -1,0 +1,284 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function hasValidParentUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) ||
+        existsAfter(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function isValidGradeLevel(val) {
+      return val is string && val in ['middle', 'high'];
+    }
+
+    function isValidWorkspaceId(val) {
+      return val is string && val.size() >= 1 && val.size() <= 40 &&
+        val in [
+          'korean', 'math', 'english', 'science', 'social', 'history',
+          'foreign', 'informatics', 'free-chat', 'doc-summary',
+          'photo-analysis', 'resource-search', 'doc-maker', 'ppt-maker', 'all'
+        ];
+    }
+
+    function isValidStudyMode(val) {
+      return val is string && val in ['tutor', 'fast', 'solve-only', 'performance'];
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'gradeLevel', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'uid', 'displayName', 'email', 'photoURL', 'gradeLevel',
+          'careerGoal', 'careerPromptDismissed', 'connectCareer',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.uid is string && data.uid == request.auth.uid && data.uid == userId &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+        data.email is string && data.email.size() <= 160 &&
+        (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
+        isValidGradeLevel(data.gradeLevel) &&
+        (!('careerGoal' in data) || (data.careerGoal is string && data.careerGoal.size() <= 80)) &&
+        (!('careerPromptDismissed' in data) || data.careerPromptDismissed is bool) &&
+        (!('connectCareer' in data) || data.connectCareer is bool) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidNotebookSession(data, sessionId, userId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'workspaceId', 'gradeLevel', 'studyMode',
+          'title', 'messages', 'updatedAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'ownerId', 'workspaceId', 'subTrackId', 'gradeLevel',
+          'studyMode', 'thinkingDepth', 'title', 'messages', 'pinned',
+          'updatedAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == sessionId &&
+        data.ownerId is string && data.ownerId == request.auth.uid && data.ownerId == userId &&
+        isValidWorkspaceId(data.workspaceId) && data.workspaceId != 'all' &&
+        (!('subTrackId' in data) || (data.subTrackId is string && data.subTrackId.size() <= 60)) &&
+        isValidGradeLevel(data.gradeLevel) &&
+        isValidStudyMode(data.studyMode) &&
+        (!('thinkingDepth' in data) || (data.thinkingDepth is string && data.thinkingDepth in ['standard', 'deep'])) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.messages is list && data.messages.size() <= 120 &&
+        (data.messages.size() == 0 || (
+          data.messages[0] is map &&
+          data.messages[0].id is string &&
+          data.messages[0].role in ['user', 'assistant'] &&
+          data.messages[0].content is string
+        )) &&
+        (!('pinned' in data) || data.pinned is bool) &&
+        data.updatedAtMs is number &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSavedPrompt(data, promptId, userId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'title', 'content', 'workspaceId',
+          'createdAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'ownerId', 'title', 'content', 'workspaceId',
+          'createdAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == promptId &&
+        data.ownerId is string && data.ownerId == request.auth.uid && data.ownerId == userId &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        data.content is string && data.content.size() >= 1 && data.content.size() <= 4000 &&
+        isValidWorkspaceId(data.workspaceId) &&
+        data.createdAtMs is number &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSavedStudyNote(data, noteId, userId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'workspaceId', 'gradeLevel', 'title',
+          'content', 'mastered', 'createdAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'ownerId', 'workspaceId', 'subTrackLabel', 'gradeLevel',
+          'title', 'content', 'mastered', 'createdAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == noteId &&
+        data.ownerId is string && data.ownerId == request.auth.uid && data.ownerId == userId &&
+        isValidWorkspaceId(data.workspaceId) && data.workspaceId != 'all' &&
+        (!('subTrackLabel' in data) || (data.subTrackLabel is string && data.subTrackLabel.size() <= 80)) &&
+        isValidGradeLevel(data.gradeLevel) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.content is string && data.content.size() >= 1 && data.content.size() <= 30000 &&
+        data.mastered is bool &&
+        data.createdAtMs is number &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSearchHistoryEntry(data, entryId, userId) {
+      return data.keys().hasAll([
+          'id', 'ownerId', 'query', 'sessionId',
+          'createdAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'ownerId', 'query', 'subTrackId', 'sessionId',
+          'createdAtMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == entryId &&
+        data.ownerId is string && data.ownerId == request.auth.uid && data.ownerId == userId &&
+        data.query is string && data.query.size() >= 1 && data.query.size() <= 300 &&
+        (!('subTrackId' in data) || (data.subTrackId is string && data.subTrackId.size() <= 60)) &&
+        data.sessionId is string && data.sessionId.size() >= 1 && data.sessionId.size() <= 128 &&
+        data.createdAtMs is number &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // User profile (PII strictly restricted to verified owner)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if isOwner(userId) && resource.data.uid == request.auth.uid;
+      allow create: if isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserProfile(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'photoURL', 'updatedAt']) ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['gradeLevel', 'careerGoal', 'careerPromptDismissed', 'connectCareer', 'updatedAt'])
+        );
+      allow delete: if isValidId(userId) && isOwner(userId);
+
+      // Private Notebook Sessions
+      match /sessions/{sessionId} {
+        allow get: if isValidId(userId) && isValidId(sessionId) && isOwner(userId) && hasValidParentUser(userId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(sessionId) &&
+          isOwner(userId) &&
+          isValidNotebookSession(incoming(), sessionId, userId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId);
+        allow update: if isValidId(userId) && isValidId(sessionId) &&
+          isOwner(userId) &&
+          isValidNotebookSession(incoming(), sessionId, userId) &&
+          incoming().id == existing().id &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId) &&
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'subTrackId', 'gradeLevel', 'studyMode', 'thinkingDepth',
+              'title', 'messages', 'updatedAtMs', 'updatedAt'
+            ]) ||
+            incoming().diff(existing()).affectedKeys().hasOnly(['pinned', 'updatedAt'])
+          );
+        allow delete: if isValidId(userId) && isValidId(sessionId) && isOwner(userId) && hasValidParentUser(userId);
+      }
+
+      // Private Saved Prompts
+      match /prompts/{promptId} {
+        allow get: if isValidId(userId) && isValidId(promptId) && isOwner(userId) && hasValidParentUser(userId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(promptId) &&
+          isOwner(userId) &&
+          isValidSavedPrompt(incoming(), promptId, userId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId);
+        allow update: if isValidId(userId) && isValidId(promptId) &&
+          isOwner(userId) &&
+          isValidSavedPrompt(incoming(), promptId, userId) &&
+          incoming().id == existing().id &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId) &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'workspaceId', 'updatedAt']);
+        allow delete: if isValidId(userId) && isValidId(promptId) && isOwner(userId) && hasValidParentUser(userId);
+      }
+
+      // Private Saved Study Notes
+      match /studyNotes/{noteId} {
+        allow get: if isValidId(userId) && isValidId(noteId) && isOwner(userId) && hasValidParentUser(userId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(noteId) &&
+          isOwner(userId) &&
+          isValidSavedStudyNote(incoming(), noteId, userId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId);
+        allow update: if isValidId(userId) && isValidId(noteId) &&
+          isOwner(userId) &&
+          isValidSavedStudyNote(incoming(), noteId, userId) &&
+          incoming().id == existing().id &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId) &&
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['mastered', 'updatedAt']) ||
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'mastered', 'updatedAt'])
+          );
+        allow delete: if isValidId(userId) && isValidId(noteId) && isOwner(userId) && hasValidParentUser(userId);
+      }
+
+      // Private Search History
+      match /searchHistory/{entryId} {
+        allow get: if isValidId(userId) && isValidId(entryId) && isOwner(userId) && hasValidParentUser(userId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isValidId(userId) && isValidId(entryId) &&
+          isOwner(userId) &&
+          isValidSearchHistoryEntry(incoming(), entryId, userId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId);
+        allow update: if isValidId(userId) && isValidId(entryId) &&
+          isOwner(userId) &&
+          isValidSearchHistoryEntry(incoming(), entryId, userId) &&
+          incoming().id == existing().id &&
+          incoming().ownerId == existing().ownerId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          hasValidParentUser(userId) &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['query', 'subTrackId', 'sessionId', 'createdAtMs', 'updatedAt']);
+        allow delete: if isValidId(userId) && isValidId(entryId) && isOwner(userId) && hasValidParentUser(userId);
+      }
+    }
+  }
+}

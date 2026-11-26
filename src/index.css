@@ -1,0 +1,300 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-sans: "Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: "Plus Jakarta Sans", "Noto Sans KR", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+    --study-answer-font: var(--font-sans);
+    --study-answer-size: 15px;
+    --study-chat-size: 14px;
+    --study-answer-line-height: 1.76;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #FAF7F0;
+    color: #17191C;
+    transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html.dark body {
+    background-color: #111215;
+    color: #EFECE4;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-code {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle editorial paper dot-grid */
+.notebook-canvas-pattern {
+  background-image: radial-gradient(rgba(23, 25, 28, 0.055) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+html.dark .notebook-canvas-pattern {
+  background-image: radial-gradient(rgba(239, 236, 228, 0.05) 1px, transparent 1px);
+}
+
+/* Refined minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(23, 25, 28, 0.14);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(23, 25, 28, 0.26);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: rgba(239, 236, 228, 0.14);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(239, 236, 228, 0.26);
+}
+
+/* Clean Markdown prose styling inside digital notebook sheets */
+.study-prose {
+  font-family: var(--study-answer-font);
+  line-height: var(--study-answer-line-height);
+  font-size: var(--study-answer-size);
+  max-width: 74ch;
+}
+
+.study-chat-text {
+  font-size: var(--study-chat-size);
+}
+
+.answer-font-sans {
+  font-family: "Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.answer-font-plex {
+  font-family: "IBM Plex Sans KR", "Plus Jakarta Sans", "Noto Sans KR", sans-serif;
+}
+
+.answer-font-serif {
+  font-family: "Noto Serif KR", Georgia, serif;
+}
+
+.answer-font-gowun {
+  font-family: "Gowun Dodum", "Noto Sans KR", sans-serif;
+}
+
+.answer-font-handwriting {
+  font-family: "Nanum Pen Script", "Noto Sans KR", cursive, sans-serif;
+  font-size: 1.18em;
+}
+
+.study-prose h1,
+.study-prose h2,
+.study-prose h3 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 1.35em;
+  margin-bottom: 0.5em;
+  line-height: 1.35;
+  color: #17191C;
+}
+
+html.dark .study-prose h1,
+html.dark .study-prose h2,
+html.dark .study-prose h3 {
+  color: #F5F2EA;
+}
+
+.study-prose h1:first-child,
+.study-prose h2:first-child,
+.study-prose h3:first-child {
+  margin-top: 0.1em;
+}
+
+.study-prose h1 { font-size: 1.28em; }
+.study-prose h2 { font-size: 1.14em; }
+.study-prose h3 { font-size: 1.04em; }
+
+.study-prose p {
+  margin-bottom: 0.8em;
+}
+
+.study-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.study-prose strong {
+  font-weight: 600;
+  color: #111316;
+}
+
+html.dark .study-prose strong {
+  color: #FAF7F0;
+}
+
+.study-prose ul,
+.study-prose ol {
+  margin: 0.6em 0 0.85em 1.25rem;
+}
+
+.study-prose ul {
+  list-style-type: disc;
+}
+
+.study-prose ol {
+  list-style-type: decimal;
+}
+
+.study-prose li {
+  margin-bottom: 0.35em;
+}
+
+.study-prose hr {
+  border: 0;
+  border-top: 1px solid #E6DFD1;
+  margin: 1.25em 0;
+}
+
+html.dark .study-prose hr {
+  border-top-color: #272A33;
+}
+
+.study-prose pre {
+  margin: 0.9em 0;
+  padding: 0.95rem 1.1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  line-height: 1.6;
+  background-color: #F4EFE4;
+  border: 1px solid #E6DFD1;
+}
+
+html.dark .study-prose pre {
+  background-color: #14161A;
+  border-color: #272A33;
+}
+
+.study-prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  padding: 0.12rem 0.38rem;
+  border-radius: 0.35rem;
+  background-color: rgba(23, 25, 28, 0.06);
+}
+
+html.dark .study-prose code:not(pre code) {
+  background-color: rgba(239, 236, 228, 0.1);
+}
+
+.study-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.study-prose th,
+.study-prose td {
+  border: 1px solid #E6DFD1;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.study-prose th {
+  background-color: #F4EFE4;
+  font-weight: 600;
+}
+
+html.dark .study-prose th,
+html.dark .study-prose td {
+  border-color: #272A33;
+}
+
+html.dark .study-prose th {
+  background-color: #1F222A;
+}
+
+.study-prose blockquote {
+  margin: 0.85em 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  background-color: #F5F1E7;
+  border: 1px solid #E6DFD1;
+}
+
+html.dark .study-prose blockquote {
+  background-color: #1B1D24;
+  border-color: #272A33;
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+/* Printable A4 sheet for PDF export & preview (always clean white paper + crisp ink) */
+.pdf-export-sheet {
+  background-color: #FFFFFF;
+  color: #17191C;
+  font-family: "Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.pdf-export-sheet .study-prose {
+  font-family: "Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.72;
+  color: #1E2024;
+  max-width: none;
+}
+
+.pdf-export-sheet .study-prose h1,
+.pdf-export-sheet .study-prose h2,
+.pdf-export-sheet .study-prose h3,
+.pdf-export-sheet .study-prose strong {
+  color: #17191C;
+}
+
+.pdf-export-sheet .study-prose th {
+  background-color: #F4EFE4;
+  color: #17191C;
+}
+
+.pdf-export-sheet .study-prose th,
+.pdf-export-sheet .study-prose td {
+  border-color: #DFD7C6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
